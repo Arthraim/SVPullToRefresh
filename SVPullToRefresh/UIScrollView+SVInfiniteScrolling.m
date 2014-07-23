@@ -11,7 +11,7 @@
 #import "UIScrollView+SVInfiniteScrolling.h"
 
 
-static CGFloat const SVInfiniteScrollingViewHeight = 60;
+static CGFloat const SVInfiniteScrollingViewHeight = 90;
 
 @interface SVInfiniteScrollingDotView : UIView
 
@@ -52,13 +52,13 @@ UIEdgeInsets scrollViewOriginalContentInsets;
 @dynamic infiniteScrollingView;
 
 - (void)addInfiniteScrollingWithActionHandler:(void (^)(void))actionHandler {
-    
+
     if(!self.infiniteScrollingView) {
         SVInfiniteScrollingView *view = [[SVInfiniteScrollingView alloc] initWithFrame:CGRectMake(0, self.contentSize.height, self.bounds.size.width, SVInfiniteScrollingViewHeight)];
         view.infiniteScrollingHandler = actionHandler;
         view.scrollView = self;
         [self addSubview:view];
-        
+
         view.originalBottomInset = self.contentInset.bottom;
         self.infiniteScrollingView = view;
         self.showsInfiniteScrolling = YES;
@@ -84,7 +84,7 @@ UIEdgeInsets scrollViewOriginalContentInsets;
 
 - (void)setShowsInfiniteScrolling:(BOOL)showsInfiniteScrolling {
     self.infiniteScrollingView.hidden = !showsInfiniteScrolling;
-    
+
     if(!showsInfiniteScrolling) {
       if (self.infiniteScrollingView.isObserving) {
         [self removeObserver:self.infiniteScrollingView forKeyPath:@"contentOffset"];
@@ -99,7 +99,7 @@ UIEdgeInsets scrollViewOriginalContentInsets;
         [self addObserver:self.infiniteScrollingView forKeyPath:@"contentSize" options:NSKeyValueObservingOptionNew context:nil];
         [self.infiniteScrollingView setScrollViewContentInsetForInfiniteScrolling];
         self.infiniteScrollingView.isObserving = YES;
-          
+
         [self.infiniteScrollingView setNeedsLayout];
         self.infiniteScrollingView.frame = CGRectMake(0, self.contentSize.height, self.infiniteScrollingView.bounds.size.width, SVInfiniteScrollingViewHeight);
       }
@@ -126,16 +126,16 @@ UIEdgeInsets scrollViewOriginalContentInsets;
 
 - (id)initWithFrame:(CGRect)frame {
     if(self = [super initWithFrame:frame]) {
-        
+
         // default styling values
         self.activityIndicatorViewStyle = UIActivityIndicatorViewStyleGray;
         self.autoresizingMask = UIViewAutoresizingFlexibleWidth;
         self.state = SVInfiniteScrollingStateStopped;
         self.enabled = YES;
-        
+
         self.viewForState = [NSMutableArray arrayWithObjects:@"", @"", @"", @"", nil];
     }
-    
+
     return self;
 }
 
@@ -182,7 +182,7 @@ UIEdgeInsets scrollViewOriginalContentInsets;
 
 #pragma mark - Observing
 
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {    
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
     if([keyPath isEqualToString:@"contentOffset"])
         [self scrollViewDidScroll:[[change valueForKey:NSKeyValueChangeNewKey] CGPointValue]];
     else if([keyPath isEqualToString:@"contentSize"]) {
@@ -195,7 +195,7 @@ UIEdgeInsets scrollViewOriginalContentInsets;
     if(self.state != SVInfiniteScrollingStateLoading && self.enabled) {
         CGFloat scrollViewContentHeight = self.scrollView.contentSize.height;
         CGFloat scrollOffsetThreshold = scrollViewContentHeight-self.scrollView.bounds.size.height;
-        
+
         if(!self.scrollView.isDragging && self.state == SVInfiniteScrollingStateTriggered)
             self.state = SVInfiniteScrollingStateLoading;
         else if(contentOffset.y > scrollOffsetThreshold && self.state == SVInfiniteScrollingStateStopped && self.scrollView.isDragging)
@@ -224,15 +224,15 @@ UIEdgeInsets scrollViewOriginalContentInsets;
 
 - (void)setCustomView:(UIView *)view forState:(SVInfiniteScrollingState)state {
     id viewPlaceholder = view;
-    
+
     if(!viewPlaceholder)
         viewPlaceholder = @"";
-    
+
     if(state == SVInfiniteScrollingStateAll)
         [self.viewForState replaceObjectsInRange:NSMakeRange(0, 3) withObjectsFromArray:@[viewPlaceholder, viewPlaceholder, viewPlaceholder]];
     else
         [self.viewForState replaceObjectAtIndex:state withObject:viewPlaceholder];
-    
+
     self.state = self.state;
 }
 
@@ -256,21 +256,21 @@ UIEdgeInsets scrollViewOriginalContentInsets;
 }
 
 - (void)setState:(SVInfiniteScrollingState)newState {
-    
+
     if(_state == newState)
         return;
-    
+
     SVInfiniteScrollingState previousState = _state;
     _state = newState;
-    
+
     for(id otherView in self.viewForState) {
         if([otherView isKindOfClass:[UIView class]])
             [otherView removeFromSuperview];
     }
-    
+
     id customView = [self.viewForState objectAtIndex:newState];
     BOOL hasCustomView = [customView isKindOfClass:[UIView class]];
-    
+
     if(hasCustomView) {
         [self addSubview:customView];
         CGRect viewBounds = [customView bounds];
@@ -281,22 +281,22 @@ UIEdgeInsets scrollViewOriginalContentInsets;
         CGRect viewBounds = [self.activityIndicatorView bounds];
         CGPoint origin = CGPointMake(roundf((self.bounds.size.width-viewBounds.size.width)/2), roundf((self.bounds.size.height-viewBounds.size.height)/2));
         [self.activityIndicatorView setFrame:CGRectMake(origin.x, origin.y, viewBounds.size.width, viewBounds.size.height)];
-        
+
         switch (newState) {
             case SVInfiniteScrollingStateStopped:
                 [self.activityIndicatorView stopAnimating];
                 break;
-                
+
             case SVInfiniteScrollingStateTriggered:
                 [self.activityIndicatorView startAnimating];
                 break;
-                
+
             case SVInfiniteScrollingStateLoading:
                 [self.activityIndicatorView startAnimating];
                 break;
         }
     }
-    
+
     if(previousState == SVInfiniteScrollingStateTriggered && newState == SVInfiniteScrollingStateLoading && self.infiniteScrollingHandler && self.enabled)
         self.infiniteScrollingHandler();
 }
